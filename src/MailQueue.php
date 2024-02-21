@@ -17,7 +17,6 @@ class MailQueue {
     }
 
     public function enqueueMail($email, $name) {
-        // Insert into mail queue
         $stmt = $this->pdo->prepare("INSERT INTO mail_queue (email, name, status, queued_at) VALUES (?, ?, 'pending', NOW())");
         $stmt->execute([$email, $name]);
     }
@@ -29,11 +28,9 @@ class MailQueue {
 
         foreach ($mailsToSend as $mail) {
             if ($this->sendMail($mail['email'], $mail['name'])) {
-                // Update status to 'sent'
                 $updateStmt = $this->pdo->prepare("UPDATE mail_queue SET status = 'sent', sent_at = NOW() WHERE id = ?");
                 $updateStmt->execute([$mail['id']]);
             } else {
-                // Update status to 'failed'
                 $updateStmt = $this->pdo->prepare("UPDATE mail_queue SET status = 'failed' WHERE id = ?");
                 $updateStmt->execute([$mail['id']]);
             }
@@ -44,7 +41,7 @@ class MailQueue {
         try {
             // Send email using Mailgun API
             $response = $this->mgClient->messages()->send($this->domain, [
-                'from'    => 'Excited User <mailgun@sandbox10140c44e47445b89719b7b24b0e78a6.mailgun.org>', // Adjust sender
+                'from'    => 'Excited User <mailgun@sandbox10140c44e47445b89719b7b24b0e78a6.mailgun.org>',
                 'to'      => "$name <$email>",
                 'subject' => 'Hello',
                 'text'    => 'Registration successful'
@@ -52,7 +49,6 @@ class MailQueue {
 
             return true;
         } catch (Exception $e) {
-            // Log or handle API sending errors here
             error_log('Mailgun API Error: ' . $e->getMessage());
             return false;
         }
